@@ -64,12 +64,17 @@ PCSCLite::PCSCLite(): m_card_context(0),
 
 postServiceCheck:
     LONG result;
+	int numRetries = 0;
     do {
         result = SCardEstablishContext(SCARD_SCOPE_SYSTEM,
                                             NULL,
                                             NULL,
                                             &m_card_context);
-    } while(result == SCARD_E_NO_SERVICE || result == SCARD_E_SERVICE_STOPPED);
+		if (result != SCARD_S_SUCCESS) {
+			numRetries++;
+			Sleep(750);
+		}
+    } while((result == SCARD_E_NO_SERVICE || result == SCARD_E_SERVICE_STOPPED) && numRetries < 3);
     if (result != SCARD_S_SUCCESS) {
         Nan::ThrowError(error_msg("SCardEstablishContext", result).c_str());
     } else {
